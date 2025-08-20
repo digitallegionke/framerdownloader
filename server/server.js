@@ -180,7 +180,36 @@ app.post('/api/download', async (req, res) => {
         await Promise.all(assetPromises);
         console.log(`[${timestamp}] All assets downloaded.`); // Log after Promise.all
 
-        const modifiedHtml = html.replace(/<div class="framer-badge.*?>.*?<\/div>/s, '');
+        // Remove Framer badge and edit site elements
+        console.log(`[${timestamp}] Starting HTML cleanup to remove Framer edit elements and badges...`);
+        const originalHtmlLength = html.length;
+        let modifiedHtml = html;
+        
+        // Remove Framer badge with various possible class names and structures
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*class="[^"]*framer-badge[^"]*"[^>]*>.*?<\/div>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*data-framer-name="[^"]*badge[^"]*"[^>]*>.*?<\/div>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*id="[^"]*framer-badge[^"]*"[^>]*>.*?<\/div>/gis, '');
+        
+        // Remove Framer edit site elements and overlays
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*class="[^"]*framer-edit[^"]*"[^>]*>.*?<\/div>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*data-framer-name="[^"]*edit[^"]*"[^>]*>.*?<\/div>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*class="[^"]*edit-overlay[^"]*"[^>]*>.*?<\/div>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*class="[^"]*framer-overlay[^"]*"[^>]*>.*?<\/div>/gis, '');
+        
+        // Remove any elements with data attributes indicating Framer editing functionality
+        modifiedHtml = modifiedHtml.replace(/<[^>]*data-framer-edit[^>]*>.*?<\/[^>]+>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<[^>]*data-framer-component="[^"]*edit[^"]*"[^>]*>.*?<\/[^>]+>/gis, '');
+        
+        // Remove common Framer editing UI elements
+        modifiedHtml = modifiedHtml.replace(/<div[^>]*style="[^"]*position:\s*fixed[^"]*"[^>]*class="[^"]*framer[^"]*"[^>]*>.*?<\/div>/gis, '');
+        
+        // Remove script tags that might contain Framer editing functionality
+        modifiedHtml = modifiedHtml.replace(/<script[^>]*src="[^"]*framer[^"]*edit[^"]*"[^>]*>.*?<\/script>/gis, '');
+        modifiedHtml = modifiedHtml.replace(/<script[^>]*>[\s\S]*?framer[\.\w]*edit[\s\S]*?<\/script>/gis, '');
+        
+        const cleanedHtmlLength = modifiedHtml.length;
+        const removedBytes = originalHtmlLength - cleanedHtmlLength;
+        console.log(`[${timestamp}] HTML cleanup complete. Removed ${removedBytes} bytes of Framer editing elements.`);
         console.log(`[${timestamp}] Writing index.html...`); // Log before writing index.html
         await fs.writeFile(path.join(downloadDir, 'index.html'), modifiedHtml);
         console.log(`[${timestamp}] index.html written.`); // Log after writing index.html

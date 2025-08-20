@@ -13,6 +13,10 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/server/server.js" },
-    { "src": "/(.*)", "dest": "/client/$1" }
+    { "src": "/static/(.*)", "dest": "/client/static/$1" },
+    { "src": "/favicon.ico", "dest": "/client/favicon.ico" },
+    { "src": "/manifest.json", "dest": "/client/manifest.json" },
+    { "src": "/logo(.*).png", "dest": "/client/logo$1.png" },
+    { "src": "/(.*)", "dest": "/client/index.html" }
   ]
-} 
+}
